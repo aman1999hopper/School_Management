@@ -1,78 +1,69 @@
-import { Pool } from "pg";
+// lib/db.js
+import mysql from "mysql2/promise";
 
-// PostgreSQL database configuration
-const dbConfig = {
-  host: "localhost",
-  port: 5432,                     // Default PostgreSQL port
-  user: "postgres",               // Default PostgreSQL username (change if needed)
-  password: "",                   // Your PostgreSQL password
-  database: "school_db",          // Database name
-  max: 10,                        // Max number of connections
-  idleTimeoutMillis: 30000,       // Close idle connections after 30s
-  connectionTimeoutMillis: 2000,  // Error if connection not established in 2s
+const poolConfig = {
+  host: process.env.MYSQL_HOST || "localhost",
+  user: process.env.MYSQL_USER || "root",
+  password: process.env.MYSQL_PASSWORD || "",
+  database: process.env.MYSQL_DATABASE || "schools_db",
+  port: parseInt(process.env.MYSQL_PORT || "3306", 10),
+  waitForConnections: true,
+  connectionLimit: parseInt(process.env.MYSQL_CONNECTION_LIMIT || "10", 10),
+  queueLimit: 0,
 };
 
-let pool;
+let pool = null;
 
-// Create (or reuse) connection pool
-export async function getConnection() {
+export async function getPool() {
   if (!pool) {
-    pool = new Pool(dbConfig);
-    console.log("✅ PostgreSQL connection pool created");
+    pool = mysql.createPool(poolConfig);
+    console.log("✅ MySQL pool created");
   }
   return pool;
 }
 
-// Test database connection
 export async function testConnection() {
   try {
-    const pool = await getConnection();
-    const result = await pool.query("SELECT NOW() as current_time");
-    console.log("✅ PostgreSQL connection successful");
-    console.log("Server time:", result.rows[0].current_time);
+    const p = await getPool();
+    const [rows] = await p.query("SELECT NOW() as now");
+    console.log("✅ MySQL connection ok:", rows[0].now);
     return true;
-  } catch (error) {
-    console.error("❌ PostgreSQL connection failed:", error);
+  } catch (err) {
+    console.error("❌ MySQL connection failed:", err);
     return false;
   }
 }
 
-// SQL to create the schools table
-export const createSchoolsTable = `
-  CREATE TABLE IF NOT EXISTS schools (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    address TEXT NOT NULL,
-    city TEXT NOT NULL,
-    state TEXT NOT NULL,
-    contact BIGINT NOT NULL,
-    image TEXT,
-    email_id TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-  );
+export const createSchoolsTableSQL = `
+CREATE TABLE IF NOT EXISTS schools (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  address TEXT NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  state VARCHAR(100) NOT NULL,
+  contact BIGINT NOT NULL,
+  image VARCHAR(255),
+  email_id VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `;
 
-// Initialize database
 export async function initializeDatabase() {
   try {
-    const pool = await getConnection();
-    await pool.query(createSchoolsTable);
-    console.log("✅ Database initialized successfully");
+    const p = await getPool();
+    await p.execute(createSchoolsTableSQL);
+    console.log("✅ schools table ensured");
     return true;
-  } catch (error) {
-    console.error("❌ Error initializing database:", error);
+  } catch (err) {
+    console.error("❌ initializeDatabase error:", err);
     return false;
   }
 }
 
-// Close connection pool
-export async function closeConnection() {
-  try {
-    if (pool) {
-      await pool.end();
-      console.log("✅ PostgreSQL connection pool closed");
-    }
-  } catch (error) {
-    console.error("❌ Error closing PostgreSQL connection pool:", error);
+export async function closePool() {
+  if (pool) {
+    await pool.end();
+    pool = null;
+    console.log("✅ MySQL pool closed");
   }
 }
