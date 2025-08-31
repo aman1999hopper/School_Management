@@ -17,7 +17,7 @@ let pool = null;
 export async function getPool() {
   if (!pool) {
     pool = mysql.createPool(poolConfig);
-    console.log("✅ MySQL pool created");
+    console.log("MySQL pool created");
   }
   return pool;
 }
@@ -26,10 +26,10 @@ export async function testConnection() {
   try {
     const p = await getPool();
     const [rows] = await p.query("SELECT NOW() as now");
-    console.log("✅ MySQL connection ok:", rows[0].now);
+    console.log("MySQL connection ok:", rows[0].now);
     return true;
   } catch (err) {
-    console.error("❌ MySQL connection failed:", err);
+    console.error("MySQL connection failed:", err);
     return false;
   }
 }
@@ -52,10 +52,10 @@ export async function initializeDatabase() {
   try {
     const p = await getPool();
     await p.execute(createSchoolsTableSQL);
-    console.log("✅ schools table ensured");
+    console.log("schools table ensured");
     return true;
   } catch (err) {
-    console.error("❌ initializeDatabase error:", err);
+    console.error("initializeDatabase error:", err);
     return false;
   }
 }
@@ -64,6 +64,6 @@ export async function closePool() {
   if (pool) {
     await pool.end();
     pool = null;
-    console.log("✅ MySQL pool closed");
+    console.log("MySQL pool closed");
   }
 }

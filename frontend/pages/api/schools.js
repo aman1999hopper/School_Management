@@ -4,7 +4,7 @@ import multer from "multer";
 import path from "path";
 import { promises as fs } from "fs";
 
-// Multer storage config (same as your code)
+// Multer setup for file uploads
 const storage = multer.diskStorage({
   destination: async function (req, file, cb) {
     const uploadDir = path.join(process.cwd(), "public", "schoolImages");
@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
-
+// 5MB limit and image file filter
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -32,6 +32,7 @@ const upload = multer({
 
 export const config = { api: { bodyParser: false } };
 
+// Helper to run multer as middleware
 function runMiddleware(req, res, fn) {
   return new Promise((resolve, reject) => {
     fn(req, res, (result) => {
