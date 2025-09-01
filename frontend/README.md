@@ -40,12 +40,12 @@ npm install
 ### 2. Environment Configuration
 Create `.env.local` file:
 ```env
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_root_password_here
-MYSQL_DATABASE=schools_db
-MYSQL_CONNECTION_LIMIT=10
+
+DB_HOST=""
+DB_PORT=
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=railway
 ```
 
 ### 3. Database Setup
